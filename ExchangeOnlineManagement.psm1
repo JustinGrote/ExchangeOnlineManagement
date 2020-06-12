@@ -280,7 +280,7 @@ function Connect-ExchangeOnline
         [string] $Prefix = '',
 
         # Show Banner of Exchange cmdlets Mapping and recent updates
-        [switch] $ShowBanner = $true
+        [switch] $HideBanner
     )
     DynamicParam
     {
@@ -382,7 +382,7 @@ function Connect-ExchangeOnline
             throw "Prefix 'EXO' is a reserved Prefix, please use a different prefix."
         }
 
-        if ($ShowBanner -eq $true)
+        if (-not $HideBanner)
         {
             Print-Details;
         }
