@@ -204,18 +204,7 @@
     #>
     function RemoveExistingPSSession()
     {
-        $existingPSSession = GetExistingPSSession
-
-        if ($existingPSSession.count -gt 0) 
-        {
-            for ($index = 0; $index -lt $existingPSSession.count; $index++)
-            {
-                $session = $existingPSSession[$index]
-                Remove-PSSession -session $session
-
-                Write-Verbose "Removed the PSSession $($session.Name) connected to $($session.ComputerName)"
-            }
-        }
+        GetExistingPSSession | Remove-PSSession
 
         # Clear any left over PS tmp modules
         if ($null -ne $SCRIPT:_EXO_PreviousModuleName)
