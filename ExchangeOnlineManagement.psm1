@@ -596,7 +596,7 @@ function Connect-IPPSSession
         }
         else
         {
-           $newUri = $ConnectionUri;
+            $newUri = $ConnectionUri;
         }
 
         if ($isCloudShell -eq $false)
@@ -633,7 +633,7 @@ function Disconnect-ExchangeOnline
                 # Remove any active access token from the cache
                 Clear-ActiveToken
 
-                Write-Host "Disconnected successfully !"
+                Write-Verbose "Disconnected Exchange Powershell Session"
 
                 if ($SCRIPT:_EXO_EnableErrorReporting -eq $true)
                 {
