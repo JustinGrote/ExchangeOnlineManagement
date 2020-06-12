@@ -117,9 +117,6 @@
                         }
                         else
                         {
-                            # Import the module once more to ensure that Test-ActiveToken is present
-                            Import-Module $SCRIPT:_EXO_ModulePath -Cmdlet Test-ActiveToken;
-
                             # If there is no active token run the new session flow
                             $hasActiveToken = Test-ActiveToken
                             $sessionIsOpened = $SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -eq 'Opened'
@@ -132,9 +129,6 @@
                     }
                     if (($SCRIPT:PSSession -eq $null) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened') -or ($shouldRemoveCurrentSession -eq $true))
                     {
-                        # Import the module once more to ensure that New-ExoPSSession is present
-                        Import-Module $SCRIPT:_EXO_ModulePath -Cmdlet New-ExoPSSession;
-
                         Write-PSImplicitRemotingMessage ('Creating a new Remote PowerShell session using Modern Authentication for implicit remoting of "{0}" command ...' -f $commandName)
                         if (($isCloudShell = IsCloudShellEnvironment) -eq $false)
                         {
@@ -419,13 +413,10 @@ function Connect-ExchangeOnline
                 Write-Warning "You are already connected to an Exchange Session. Please specify -Force if you wish to create a new connection anyways."
                 return
             }
-            
+
             # Cleanup old exchange online PSSessions
             RemoveExistingPSSession
-
-            $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellGalleryModule.dll";
-            $ModulePath = [System.IO.Path]::Combine($PSScriptRoot, $ExoPowershellModule);
-
+            
             $SCRIPT:_EXO_ExchangeEnvironmentName = $ExchangeEnvironmentName;
             $SCRIPT:_EXO_ConnectionUri = $ConnectionUri;
             $SCRIPT:_EXO_AzureADAuthorizationEndpointUri = $AzureADAuthorizationEndpointUri;
@@ -445,10 +436,6 @@ function Connect-ExchangeOnline
                 $SCRIPT:_EXO_Device = $Device.Value;
             }
 
-            Import-Module $ModulePath;
-
-            $SCRIPT:_EXO_ModulePath = $ModulePath;
-
             if ($isCloudShell -eq $false)
             {
                 $PSSession = New-ExoPSSession -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -UserPrincipalName $UserPrincipalName.Value -PSSessionOption $PSSessionOption -Credential $Credential.Value -BypassMailboxAnchoring:$BypassMailboxAnchoring -DelegatedOrg $DelegatedOrganization
@@ -467,11 +454,6 @@ function Connect-ExchangeOnline
                 Import-Module $PSSessionModuleInfo.Path -Global -DisableNameChecking -Prefix $Prefix
 
                 UpdateImplicitRemotingHandler
-
-                # Import the REST module
-                $RestPowershellModule = "Microsoft.Exchange.Management.RestApiClient.dll";
-                $RestModulePath = [System.IO.Path]::Combine($PSScriptRoot, $RestPowershellModule);
-                Import-Module $RestModulePath -Cmdlet Set-ExoAppSettings;
 
                 # If we are configured to collect telemetry, add telemetry wrappers. 
                 if ($EnableErrorReporting.Value -eq $true)
@@ -502,11 +484,6 @@ function Connect-ExchangeOnline
                 if ($SCRIPT:_EXO_TelemetryFilePath -eq $null)
                 {
                     $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath -LogDirectoryPath $LogDirectoryPath.Value
-
-                    # Import the REST module
-                    $RestPowershellModule = "Microsoft.Exchange.Management.RestApiClient.dll";
-                    $RestModulePath = [System.IO.Path]::Combine($PSScriptRoot, $RestPowershellModule);
-                    Import-Module $RestModulePath -Cmdlet Set-ExoAppSettings;
 
                     # Set the AppSettings
                     Set-ExoAppSettings -ShowProgress $ShowProgress.Value -PageSize $PageSize.Value -UseMultithreading $UseMultithreading.Value -TrackPerformance $TrackPerformance.Value -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -EnableErrorReporting $true -LogDirectoryPath $LogDirectoryPath.Value -LogLevel $LogLevel.Value
@@ -636,9 +613,6 @@ function Disconnect-ExchangeOnline
             {
                 # Cleanup current exchange online PSSessions
                 RemoveExistingPSSession
-
-                # Import the module once more to ensure that Test-ActiveToken is present
-                Import-Module $SCRIPT:_EXO_ModulePath -Cmdlet Clear-ActiveToken;
 
                 # Remove any active access token from the cache
                 Clear-ActiveToken
