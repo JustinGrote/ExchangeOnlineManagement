@@ -200,11 +200,18 @@
     }
 
     <#
+    .Synopsis Get all existing online PSSessions
+    #>
+    function GetExistingPSSession() {
+        Get-PSSession | Where-Object {$_.ConfigurationName -like "Microsoft.Exchange" -and $_.Name -like "ExchangeOnlineInternalSession*"}
+    }
+
+    <#
     .Synopsis Remove all the existing exchange online PSSessions
     #>
     function RemoveExistingPSSession()
     {
-        $existingPSSession = Get-PSSession | Where-Object {$_.ConfigurationName -like "Microsoft.Exchange" -and $_.Name -like "ExchangeOnlineInternalSession*"}
+        $existingPSSession = GetExistingPSSession
 
         if ($existingPSSession.count -gt 0) 
         {
@@ -213,7 +220,7 @@
                 $session = $existingPSSession[$index]
                 Remove-PSSession -session $session
 
-                Write-Host "Removed the PSSession $($session.Name) connected to $($session.ComputerName)"
+                Write-Verbose "Removed the PSSession $($session.Name) connected to $($session.ComputerName)"
             }
         }
 
@@ -280,7 +287,10 @@ function Connect-ExchangeOnline
         [string] $Prefix = '',
 
         # Show Banner of Exchange cmdlets Mapping and recent updates
-        [switch] $HideBanner
+        [switch] $HideBanner,
+
+        #Remove any existing connections and re-establish
+        [switch] $Force
     )
     DynamicParam
     {
@@ -402,6 +412,14 @@ function Connect-ExchangeOnline
 
         try
         {
+            #Clean up any currently broken or closed sessions
+            RemoveBrokenOrClosedPSSession
+
+            if (-not $Force -and (GetExistingPSSession)) {
+                Write-Warning "You are already connected to an Exchange Session. Please specify -Force if you wish to create a new connection anyways."
+                return
+            }
+            
             # Cleanup old exchange online PSSessions
             RemoveExistingPSSession
 
