@@ -382,7 +382,7 @@ function Connect-ExchangeOnline
             throw "Prefix 'EXO' is a reserved Prefix, please use a different prefix."
         }
 
-        if (-not $HideBanner)
+        if (-not $_EXO_SuppressBanner -and -not $HideBanner)
         {
             Print-Details;
         }
