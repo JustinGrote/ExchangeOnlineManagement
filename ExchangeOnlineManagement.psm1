@@ -148,7 +148,13 @@
                             }
 
                             # Import the latest session to ensure that the next cmdlet call would occur on the new PSSession instance.
-                            $PSSessionModuleInfo = Import-PSSession $session -AllowClobber -DisableNameChecking
+                            $ImportPSSessionParams = @{
+                                Session = $session
+                                AllowClobber = $true
+                                DisableNameChecking = $true
+                            }
+                            if ($CommandName) {$ImportPSSessionParams.CommandName = $CommandName}
+                            $PSSessionModuleInfo = Import-PSSession @ImportPSSessionParams
                             Import-Module $PSSessionModuleInfo.Path -Global -DisableNameChecking -Prefix $SCRIPT:_EXO_Prefix
                             UpdateImplicitRemotingHandler
                             $SCRIPT:PSSession = $session
@@ -279,12 +285,16 @@ function Connect-ExchangeOnline
 
         # Prefix 
         [string] $Prefix = '',
+        
+        # Provide a list of commands to import, useful for remoting a smaller portion of commands. This directly translates to the Import-PSSession -CommandName parameter
+        [string[]]$CommandName,
 
         # Show Banner of Exchange cmdlets Mapping and recent updates
         [switch] $HideBanner,
 
         #Remove any existing connections and re-establish
         [switch] $Force
+
     )
     DynamicParam
     {
@@ -447,7 +457,13 @@ function Connect-ExchangeOnline
 
             if ($null -ne $PSSession)
             {
-                $PSSessionModuleInfo = Import-PSSession $PSSession -AllowClobber -DisableNameChecking
+                $ImportPSSessionParams = @{
+                    Session = $PSSession
+                    AllowClobber = $true
+                    DisableNameChecking = $true
+                }
+                if ($CommandName) {$ImportPSSessionParams.CommandName = $CommandName}
+                $PSSessionModuleInfo = Import-PSSession @ImportPSSessionParams
 
                 # Import the above module globally. This is needed as with using psm1 files, 
                 # any module which is dynamically loaded in the nested module does not reflect globally.
