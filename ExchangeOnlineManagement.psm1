@@ -1,9 +1,9 @@
 ############# Helper Functions Begin #############
 
     <#
-    Details to be printed on the console when the Connect-ExchangeOnline function is runffff
+    Details to be printed on the console when the Connect-ExchangeOnline function is run
     #>
-    function Print-Details
+    function PrintDetails
     {
         Write-Host -ForegroundColor Yellow ""
         Write-Host -ForegroundColor Yellow "----------------------------------------------------------------------------"
@@ -388,7 +388,7 @@ function Connect-ExchangeOnline
 
         if (-not $_EXO_SuppressBanner -and -not $HideBanner)
         {
-            Print-Details;
+            PrintDetails;
         }
 
         if (($ConnectionUri -ne '') -and ($AzureADAuthorizationEndpointUri -eq ''))
