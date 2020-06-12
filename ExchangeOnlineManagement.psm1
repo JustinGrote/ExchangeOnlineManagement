@@ -92,7 +92,7 @@
 
                     $shouldRemoveCurrentSession = $false;
                     # Clear any left over PS tmp modules
-                    if (($null -ne $SCRIPT:_EXO_PreviousModuleName) -and ($SCRIPT:MyModule.Name -ne $SCRIPT:_EXO_PreviousModuleName)) 
+                    if (($null -ne $SCRIPT:_EXO_PreviousModuleName) -and ($SCRIPT:MyModule.Name -ne $SCRIPT:_EXO_PreviousModuleName))
                     {
                         Remove-Module -Name $SCRIPT:_EXO_PreviousModuleName -ErrorAction SilentlyContinue
                         $SCRIPT:_EXO_PreviousModuleName = $null
@@ -247,7 +247,7 @@
         if ($Prefix) {$ImportPSSessionParams.Prefix = $Prefix}
         if ($CommandName) {$ImportPSSessionParams.CommandName = $CommandName}
         $ExSessionModuleInfo = Import-PSSession @ImportPSSessionParams
-        
+
         #Export-Modulemember doesn't work with nested modules, ideally the command would be exported at module scope instead
         Get-Module Microsoft.Exchange.Management.ExoPowershellGalleryModule | Import-Module -Global
         $ExSessionModuleInfo | Import-Module -Global
@@ -258,7 +258,7 @@
 
 ###### Begin Main ######
 
-function Connect-ExchangeOnline 
+function Connect-ExchangeOnline
 {
     [CmdletBinding()]
     param(
@@ -281,9 +281,9 @@ function Connect-ExchangeOnline
         # Delegated Organization Name
         [string] $DelegatedOrganization = '',
 
-        # Prefix 
+        # Prefix
         [string] $Prefix = '',
-        
+
         # Provide a list of commands to import, useful for remoting a smaller portion of commands. This directly translates to the Import-PSSession -CommandName parameter
         [string[]]$CommandName,
 
@@ -312,10 +312,10 @@ function Connect-ExchangeOnline
             $Credential = New-Object System.Management.Automation.RuntimeDefinedParameter('Credential', [System.Management.Automation.PSCredential], $attributeCollection)
             $Credential.Value = $null
 
-            # Switch to collect telemetry on command execution. 
+            # Switch to collect telemetry on command execution.
             $EnableErrorReporting = New-Object System.Management.Automation.RuntimeDefinedParameter('EnableErrorReporting', [switch], $attributeCollection)
             $EnableErrorReporting.Value = $false
-            
+
             # Where to store EXO command telemetry data. By default telemetry is stored in the directory "%TEMP%/EXOTelemetry" in the file : EXOCmdletTelemetry-yyyymmdd-hhmmss.csv.
             $LogDirectoryPath = New-Object System.Management.Automation.RuntimeDefinedParameter('LogDirectoryPath', [string], $attributeCollection)
             $LogDirectoryPath.Value = ''
@@ -332,7 +332,7 @@ function Connect-ExchangeOnline
 
 # EXO params start
 
-            # Switch to track perfomance 
+            # Switch to track perfomance
             $TrackPerformance = New-Object System.Management.Automation.RuntimeDefinedParameter('TrackPerformance', [bool], $attributeCollection)
             $TrackPerformance.Value = $false
 
@@ -369,7 +369,7 @@ function Connect-ExchangeOnline
             $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
             $attributeCollection.Add($attributes)
 
-            # Switch to MSI auth 
+            # Switch to MSI auth
             $Device = New-Object System.Management.Automation.RuntimeDefinedParameter('Device', [switch], $attributeCollection)
             $Device.Value = $false
 
@@ -424,7 +424,7 @@ function Connect-ExchangeOnline
 
             # Cleanup old exchange online PSSessions
             RemoveExistingPSSession
-            
+
             $SCRIPT:_EXO_ExchangeEnvironmentName = $ExchangeEnvironmentName;
             $SCRIPT:_EXO_ConnectionUri = $ConnectionUri;
             $SCRIPT:_EXO_AzureADAuthorizationEndpointUri = $AzureADAuthorizationEndpointUri;
@@ -459,7 +459,7 @@ function Connect-ExchangeOnline
 
                 UpdateImplicitRemotingHandler
 
-                # If we are configured to collect telemetry, add telemetry wrappers. 
+                # If we are configured to collect telemetry, add telemetry wrappers.
                 if ($EnableErrorReporting.Value -eq $true)
                 {
                     $FilePath = Add-EXOClientTelemetryWrapper -Organization (Get-OrgNameFromUPN -UPN $UserPrincipalName.Value) -PSSessionModuleName $PSSessionModuleInfo.Name -LogDirectoryPath $LogDirectoryPath.Value
@@ -471,7 +471,7 @@ function Connect-ExchangeOnline
                     # Set the AppSettings
                     Set-ExoAppSettings -ShowProgress $ShowProgress.Value -PageSize $PageSize.Value -UseMultithreading $UseMultithreading.Value -TrackPerformance $TrackPerformance.Value -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -EnableErrorReporting $true -LogDirectoryPath $LogDirectoryPath.Value -LogLevel $LogLevel.Value
                 }
-                else 
+                else
                 {
                     # Set the AppSettings disabling the logging
                     Set-ExoAppSettings -ShowProgress $ShowProgress.Value -PageSize $PageSize.Value -UseMultithreading $UseMultithreading.Value -TrackPerformance $TrackPerformance.Value -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -EnableErrorReporting $false
@@ -480,10 +480,10 @@ function Connect-ExchangeOnline
         }
         catch
         {
-            # If telemetry is enabled, log errors generated from this cmdlet also. 
+            # If telemetry is enabled, log errors generated from this cmdlet also.
             if ($EnableErrorReporting.Value -eq $true)
             {
-                $errorCountAtProcessEnd = $SCRIPT:Error.Count 
+                $errorCountAtProcessEnd = $SCRIPT:Error.Count
 
                 if ($null -eq $SCRIPT:_EXO_TelemetryFilePath)
                 {
@@ -493,9 +493,9 @@ function Connect-ExchangeOnline
                     Set-ExoAppSettings -ShowProgress $ShowProgress.Value -PageSize $PageSize.Value -UseMultithreading $UseMultithreading.Value -TrackPerformance $TrackPerformance.Value -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -EnableErrorReporting $true -LogDirectoryPath $LogDirectoryPath.Value -LogLevel $LogLevel.Value
                 }
 
-                # Log errors which are encountered during Connect-ExchangeOnline execution. 
+                # Log errors which are encountered during Connect-ExchangeOnline execution.
                 Write-Warning("Writing Connect-ExchangeOnline error log to " + $SCRIPT:_EXO_TelemetryFilePath)
-                Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Connect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $SCRIPT:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart) 
+                Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Connect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $SCRIPT:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart)
             }
 
             throw $_
@@ -553,7 +553,7 @@ function Connect-IPPSSession
             $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
             $attributeCollection.Add($attributes)
 
-            # Switch to MSI auth 
+            # Switch to MSI auth
             $Device = New-Object System.Management.Automation.RuntimeDefinedParameter('Device', [switch], $attributeCollection)
             $Device.Value = $false
 
@@ -562,7 +562,7 @@ function Connect-IPPSSession
             return $paramDictionary
         }
     }
-    process 
+    process
     {
         [string]$newUri = $null;
 
@@ -598,7 +598,7 @@ function Connect-IPPSSession
     }
 }
 
-function Disconnect-ExchangeOnline 
+function Disconnect-ExchangeOnline
 {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
     param()
@@ -635,20 +635,20 @@ function Disconnect-ExchangeOnline
             }
             catch
             {
-                # If telemetry is enabled, log errors generated from this cmdlet also. 
+                # If telemetry is enabled, log errors generated from this cmdlet also.
                 if ($SCRIPT:_EXO_EnableErrorReporting -eq $true)
                 {
-                    $errorCountAtProcessEnd = $SCRIPT:Error.Count 
+                    $errorCountAtProcessEnd = $SCRIPT:Error.Count
 
                     if ($null -eq $SCRIPT:_EXO_TelemetryFilePath)
                     {
                         $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath
                     }
 
-                    # Log errors which are encountered during Disconnect-ExchangeOnline execution. 
+                    # Log errors which are encountered during Disconnect-ExchangeOnline execution.
                     Write-Warning("Writing Disconnect-ExchangeOnline errors to " + $SCRIPT:_EXO_TelemetryFilePath)
 
-                    Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Disconnect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $SCRIPT:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart) 
+                    Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Disconnect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $SCRIPT:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart)
                 }
 
                 throw $_
