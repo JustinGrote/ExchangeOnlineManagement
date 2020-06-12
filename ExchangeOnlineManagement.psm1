@@ -1,3 +1,4 @@
+
 # Import the REST module so that the EXO* cmdlets are present before Connect-ExchangeOnline in the powershell instance.
 $RestModule = "Microsoft.Exchange.Management.RestApiClient.dll"
 $RestModulePath = [System.IO.Path]::Combine($PSScriptRoot, $RestModule)
@@ -62,7 +63,7 @@ Import-Module $ExoPowershellModulePath
     <#
     .Synopsis Is Cloud Shell Environment
     #>
-    function global:IsCloudShellEnvironment()
+    function IsCloudShellEnvironment()
     {
         if ((-not (Test-Path env:"ACC_CLOUD")) -or ((get-item env:"ACC_CLOUD").Value -ne "PROD"))
         {
@@ -74,7 +75,7 @@ Import-Module $ExoPowershellModulePath
     <#
     .Synopsis Override Get-PSImplicitRemotingSession function for reconnection
     #>
-    function global:UpdateImplicitRemotingHandler()
+    function UpdateImplicitRemotingHandler()
     {
         $modules = Get-Module tmp_*
 
@@ -101,37 +102,37 @@ Import-Module $ExoPowershellModulePath
 
                     $shouldRemoveCurrentSession = $false;
                     # Clear any left over PS tmp modules
-                    if (($global:_EXO_PreviousModuleName -ne $null) -and ($script:MyModule.Name -ne $global:_EXO_PreviousModuleName)) 
+                    if (($SCRIPT:_EXO_PreviousModuleName -ne $null) -and ($SCRIPT:MyModule.Name -ne $SCRIPT:_EXO_PreviousModuleName)) 
                     {
-                        Remove-Module -Name $global:_EXO_PreviousModuleName -ErrorAction SilentlyContinue
-                        $global:_EXO_PreviousModuleName = $null
+                        Remove-Module -Name $SCRIPT:_EXO_PreviousModuleName -ErrorAction SilentlyContinue
+                        $SCRIPT:_EXO_PreviousModuleName = $null
                     }
 
-                    if (($script:PSSession -eq $null) -or ($script:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
+                    if (($SCRIPT:PSSession -eq $null) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
                     {
                         Set-PSImplicitRemotingSession `
-                            (& $script:GetPSSession `
-                                -InstanceId $script:PSSession.InstanceId.Guid `
+                            (& $SCRIPT:GetPSSession `
+                                -InstanceId $SCRIPT:PSSession.InstanceId.Guid `
                                 -ErrorAction SilentlyContinue )
                     }
-                    if ($script:PSSession -ne $null)
+                    if ($SCRIPT:PSSession -ne $null)
                     {
-                        if ($script:PSSession.Runspace.RunspaceStateInfo.State -eq 'Disconnected')
+                        if ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -eq 'Disconnected')
                         {
                             # If we are handed a disconnected session, try re-connecting it before creating a new session.
                             Set-PSImplicitRemotingSession `
-                                (& $script:ConnectPSSession `
-                                    -Session $script:PSSession `
+                                (& $SCRIPT:ConnectPSSession `
+                                    -Session $SCRIPT:PSSession `
                                     -ErrorAction SilentlyContinue)
                         }
                         else
                         {
                             # Import the module once more to ensure that Test-ActiveToken is present
-                            Import-Module $global:_EXO_ModulePath -Cmdlet Test-ActiveToken;
+                            Import-Module $SCRIPT:_EXO_ModulePath -Cmdlet Test-ActiveToken;
 
                             # If there is no active token run the new session flow
                             $hasActiveToken = Test-ActiveToken
-                            $sessionIsOpened = $script:PSSession.Runspace.RunspaceStateInfo.State -eq 'Opened'
+                            $sessionIsOpened = $SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -eq 'Opened'
                             if (($hasActiveToken -eq $false) -or ($sessionIsOpened -ne $true))
                             {
                                 #If there is no active user token or opened session then ensure that we remove the old session
@@ -139,45 +140,45 @@ Import-Module $ExoPowershellModulePath
                             }
                         }
                     }
-                    if (($script:PSSession -eq $null) -or ($script:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened') -or ($shouldRemoveCurrentSession -eq $true))
+                    if (($SCRIPT:PSSession -eq $null) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened') -or ($shouldRemoveCurrentSession -eq $true))
                     {
                         # Import the module once more to ensure that New-ExoPSSession is present
-                        Import-Module $global:_EXO_ModulePath -Cmdlet New-ExoPSSession;
+                        Import-Module $SCRIPT:_EXO_ModulePath -Cmdlet New-ExoPSSession;
 
                         Write-PSImplicitRemotingMessage ('Creating a new Remote PowerShell session using Modern Authentication for implicit remoting of "{0}" command ...' -f $commandName)
                         if (($isCloudShell = IsCloudShellEnvironment) -eq $false)
                         {
-                            $session = New-ExoPSSession -UserPrincipalName $global:_EXO_UserPrincipalName -ExchangeEnvironmentName $global:_EXO_ExchangeEnvironmentName -ConnectionUri $global:_EXO_ConnectionUri -AzureADAuthorizationEndpointUri $global:_EXO_AzureADAuthorizationEndpointUri -PSSessionOption $global:_EXO_PSSessionOption -Credential $global:_EXO_Credential -BypassMailboxAnchoring:$global:_EXO_BypassMailboxAnchoring -DelegatedOrg $global:_EXO_DelegatedOrganization -Reconnect:$true
+                            $session = New-ExoPSSession -UserPrincipalName $SCRIPT:_EXO_UserPrincipalName -ExchangeEnvironmentName $SCRIPT:_EXO_ExchangeEnvironmentName -ConnectionUri $SCRIPT:_EXO_ConnectionUri -AzureADAuthorizationEndpointUri $SCRIPT:_EXO_AzureADAuthorizationEndpointUri -PSSessionOption $SCRIPT:_EXO_PSSessionOption -Credential $SCRIPT:_EXO_Credential -BypassMailboxAnchoring:$SCRIPT:_EXO_BypassMailboxAnchoring -DelegatedOrg $SCRIPT:_EXO_DelegatedOrganization -Reconnect:$true
                         }
                         else
                         {
-                            $session = New-ExoPSSession -ExchangeEnvironmentName $global:_EXO_ExchangeEnvironmentName -ConnectionUri $global:_EXO_ConnectionUri -AzureADAuthorizationEndpointUri $global:_EXO_AzureADAuthorizationEndpointUri -PSSessionOption $global:_EXO_PSSessionOption -BypassMailboxAnchoring:$global:_EXO_BypassMailboxAnchoring -DelegatedOrg $global:_EXO_DelegatedOrganization -Reconnect:$true
+                            $session = New-ExoPSSession -ExchangeEnvironmentName $SCRIPT:_EXO_ExchangeEnvironmentName -ConnectionUri $SCRIPT:_EXO_ConnectionUri -AzureADAuthorizationEndpointUri $SCRIPT:_EXO_AzureADAuthorizationEndpointUri -PSSessionOption $SCRIPT:_EXO_PSSessionOption -BypassMailboxAnchoring:$SCRIPT:_EXO_BypassMailboxAnchoring -DelegatedOrg $SCRIPT:_EXO_DelegatedOrganization -Reconnect:$true
                         }
 
                         if ($session -ne $null)
                         {
                             if ($shouldRemoveCurrentSession -eq $true)
                             {
-                                Remove-PSSession $script:PSSession
-                                $global:_EXO_PreviousModuleName = $script:MyModule.Name
+                                Remove-PSSession $SCRIPT:PSSession
+                                $SCRIPT:_EXO_PreviousModuleName = $SCRIPT:MyModule.Name
                             }
 
                             # Import the latest session to ensure that the next cmdlet call would occur on the new PSSession instance.
                             $PSSessionModuleInfo = Import-PSSession $session -AllowClobber -DisableNameChecking
-                            Import-Module $PSSessionModuleInfo.Path -Global -DisableNameChecking -Prefix $global:_EXO_Prefix
+                            Import-Module $PSSessionModuleInfo.Path -Global -DisableNameChecking -Prefix $SCRIPT:_EXO_Prefix
                             UpdateImplicitRemotingHandler
-                            $script:PSSession = $session
+                            $SCRIPT:PSSession = $session
 
                             # Remove the old sessions only if there is a new session to connect to
                             RemoveBrokenOrClosedPSSession
                         }
                     }
-                    if (($script:PSSession -eq $null) -or ($script:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
+                    if (($SCRIPT:PSSession -eq $null) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
                     {
                         throw 'No session has been associated with this implicit remoting module'
                     }
 
-                    return [Management.Automation.Runspaces.PSSession]$script:PSSession
+                    return [Management.Automation.Runspaces.PSSession]$SCRIPT:PSSession
                 }}
             }
         }
@@ -186,7 +187,7 @@ Import-Module $ExoPowershellModulePath
     <#
     .Synopsis Remove broken and closed exchange online PSSessions
     #>
-    function global:RemoveBrokenOrClosedPSSession()
+    function RemoveBrokenOrClosedPSSession()
     {
         $psBroken = Get-PSSession | where-object {$_.ConfigurationName -like "Microsoft.Exchange" -and $_.Name -eq "ExchangeOnlineInternalSession*" -and $_.State -like "*Broken*"}
         $psClosed = Get-PSSession | where-object {$_.ConfigurationName -like "Microsoft.Exchange" -and $_.Name -eq "ExchangeOnlineInternalSession*" -and $_.State -like "*Closed*"}
@@ -227,10 +228,10 @@ Import-Module $ExoPowershellModulePath
         }
 
         # Clear any left over PS tmp modules
-        if ($global:_EXO_PreviousModuleName -ne $null)
+        if ($SCRIPT:_EXO_PreviousModuleName -ne $null)
         {
-            Remove-Module -Name $global:_EXO_PreviousModuleName -ErrorAction SilentlyContinue
-            $global:_EXO_PreviousModuleName = $null
+            Remove-Module -Name $SCRIPT:_EXO_PreviousModuleName -ErrorAction SilentlyContinue
+            $SCRIPT:_EXO_PreviousModuleName = $null
         }
     }
 
@@ -247,7 +248,7 @@ Import-Module $ExoPowershellModulePath
     <#
     .SYNOPSIS Get the command from the given module
     #>
-    function global:Get-WrappedCommand
+    function Get-WrappedCommand
     {
         param(
         [string] $CommandName,
@@ -406,8 +407,8 @@ function Connect-ExchangeOnline
         }
 
         # Keep track of error count at beginning.
-        $errorCountAtStart = $global:Error.Count;
-        $global:_EXO_TelemetryFilePath = $null;
+        $errorCountAtStart = $SCRIPT:Error.Count;
+        $SCRIPT:_EXO_TelemetryFilePath = $null;
 
         try
         {
@@ -417,28 +418,28 @@ function Connect-ExchangeOnline
             $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellGalleryModule.dll";
             $ModulePath = [System.IO.Path]::Combine($PSScriptRoot, $ExoPowershellModule);
 
-            $global:_EXO_ExchangeEnvironmentName = $ExchangeEnvironmentName;
-            $global:_EXO_ConnectionUri = $ConnectionUri;
-            $global:_EXO_AzureADAuthorizationEndpointUri = $AzureADAuthorizationEndpointUri;
-            $global:_EXO_PSSessionOption = $PSSessionOption;
-            $global:_EXO_BypassMailboxAnchoring = $BypassMailboxAnchoring;
-            $global:_EXO_DelegatedOrganization = $DelegatedOrganization;
-            $global:_EXO_Prefix = $Prefix;
+            $SCRIPT:_EXO_ExchangeEnvironmentName = $ExchangeEnvironmentName;
+            $SCRIPT:_EXO_ConnectionUri = $ConnectionUri;
+            $SCRIPT:_EXO_AzureADAuthorizationEndpointUri = $AzureADAuthorizationEndpointUri;
+            $SCRIPT:_EXO_PSSessionOption = $PSSessionOption;
+            $SCRIPT:_EXO_BypassMailboxAnchoring = $BypassMailboxAnchoring;
+            $SCRIPT:_EXO_DelegatedOrganization = $DelegatedOrganization;
+            $SCRIPT:_EXO_Prefix = $Prefix;
 
             if ($isCloudShell -eq $false)
             {
-                $global:_EXO_UserPrincipalName = $UserPrincipalName.Value;
-                $global:_EXO_Credential = $Credential.Value;
-                $global:_EXO_EnableErrorReporting = $EnableErrorReporting.Value;
+                $SCRIPT:_EXO_UserPrincipalName = $UserPrincipalName.Value;
+                $SCRIPT:_EXO_Credential = $Credential.Value;
+                $SCRIPT:_EXO_EnableErrorReporting = $EnableErrorReporting.Value;
             }
             else
             {
-                $global:_EXO_Device = $Device.Value;
+                $SCRIPT:_EXO_Device = $Device.Value;
             }
 
             Import-Module $ModulePath;
 
-            $global:_EXO_ModulePath = $ModulePath;
+            $SCRIPT:_EXO_ModulePath = $ModulePath;
 
             if ($isCloudShell -eq $false)
             {
@@ -468,10 +469,10 @@ function Connect-ExchangeOnline
                 if ($EnableErrorReporting.Value -eq $true)
                 {
                     $FilePath = Add-EXOClientTelemetryWrapper -Organization (Get-OrgNameFromUPN -UPN $UserPrincipalName.Value) -PSSessionModuleName $PSSessionModuleInfo.Name -LogDirectoryPath $LogDirectoryPath.Value
-                    $global:_EXO_TelemetryFilePath = $FilePath[0]
+                    $SCRIPT:_EXO_TelemetryFilePath = $FilePath[0]
                     Import-Module $FilePath[1] -DisableNameChecking
 
-                    Push-EXOTelemetryRecord -TelemetryFilePath $global:_EXO_TelemetryFilePath -CommandName Connect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $global:_EXO_ExPSTelemetryOrganization -ScriptName $global:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $global:_EXO_ExPSTelemetryScriptExecutionGuid
+                    Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Connect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid
 
                     # Set the AppSettings
                     Set-ExoAppSettings -ShowProgress $ShowProgress.Value -PageSize $PageSize.Value -UseMultithreading $UseMultithreading.Value -TrackPerformance $TrackPerformance.Value -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -EnableErrorReporting $true -LogDirectoryPath $LogDirectoryPath.Value -LogLevel $LogLevel.Value
@@ -488,11 +489,11 @@ function Connect-ExchangeOnline
             # If telemetry is enabled, log errors generated from this cmdlet also. 
             if ($EnableErrorReporting.Value -eq $true)
             {
-                $errorCountAtProcessEnd = $global:Error.Count 
+                $errorCountAtProcessEnd = $SCRIPT:Error.Count 
 
-                if ($global:_EXO_TelemetryFilePath -eq $null)
+                if ($SCRIPT:_EXO_TelemetryFilePath -eq $null)
                 {
-                    $global:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath -LogDirectoryPath $LogDirectoryPath.Value
+                    $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath -LogDirectoryPath $LogDirectoryPath.Value
 
                     # Import the REST module
                     $RestPowershellModule = "Microsoft.Exchange.Management.RestApiClient.dll";
@@ -504,8 +505,8 @@ function Connect-ExchangeOnline
                 }
 
                 # Log errors which are encountered during Connect-ExchangeOnline execution. 
-                Write-Warning("Writing Connect-ExchangeOnline error log to " + $global:_EXO_TelemetryFilePath)
-                Push-EXOTelemetryRecord -TelemetryFilePath $global:_EXO_TelemetryFilePath -CommandName Connect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $global:_EXO_ExPSTelemetryOrganization -ScriptName $global:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $global:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $global:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart) 
+                Write-Warning("Writing Connect-ExchangeOnline error log to " + $SCRIPT:_EXO_TelemetryFilePath)
+                Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Connect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $SCRIPT:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart) 
             }
 
             throw $_
@@ -621,7 +622,7 @@ function Disconnect-ExchangeOnline
         {
 
             # Keep track of error count at beginning.
-            $errorCountAtStart = $global:Error.Count;
+            $errorCountAtStart = $SCRIPT:Error.Count;
 
             try
             {
@@ -629,39 +630,39 @@ function Disconnect-ExchangeOnline
                 RemoveExistingPSSession
 
                 # Import the module once more to ensure that Test-ActiveToken is present
-                Import-Module $global:_EXO_ModulePath -Cmdlet Clear-ActiveToken;
+                Import-Module $SCRIPT:_EXO_ModulePath -Cmdlet Clear-ActiveToken;
 
                 # Remove any active access token from the cache
                 Clear-ActiveToken
 
                 Write-Host "Disconnected successfully !"
 
-                if ($global:_EXO_EnableErrorReporting -eq $true)
+                if ($SCRIPT:_EXO_EnableErrorReporting -eq $true)
                 {
-                    if ($global:_EXO_TelemetryFilePath -eq $null)
+                    if ($SCRIPT:_EXO_TelemetryFilePath -eq $null)
                     {
-                        $global:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath
+                        $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath
                     }
 
-                    Push-EXOTelemetryRecord -TelemetryFilePath $global:_EXO_TelemetryFilePath -CommandName Disconnect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $global:_EXO_ExPSTelemetryOrganization -ScriptName $global:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $global:_EXO_ExPSTelemetryScriptExecutionGuid
+                    Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Disconnect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid
                 }
             }
             catch
             {
                 # If telemetry is enabled, log errors generated from this cmdlet also. 
-                if ($global:_EXO_EnableErrorReporting -eq $true)
+                if ($SCRIPT:_EXO_EnableErrorReporting -eq $true)
                 {
-                    $errorCountAtProcessEnd = $global:Error.Count 
+                    $errorCountAtProcessEnd = $SCRIPT:Error.Count 
 
-                    if ($global:_EXO_TelemetryFilePath -eq $null)
+                    if ($SCRIPT:_EXO_TelemetryFilePath -eq $null)
                     {
-                        $global:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath
+                        $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath
                     }
 
                     # Log errors which are encountered during Disconnect-ExchangeOnline execution. 
-                    Write-Warning("Writing Disconnect-ExchangeOnline errors to " + $global:_EXO_TelemetryFilePath)
+                    Write-Warning("Writing Disconnect-ExchangeOnline errors to " + $SCRIPT:_EXO_TelemetryFilePath)
 
-                    Push-EXOTelemetryRecord -TelemetryFilePath $global:_EXO_TelemetryFilePath -CommandName Disconnect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $global:_EXO_ExPSTelemetryOrganization -ScriptName $global:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $global:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $global:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart) 
+                    Push-EXOTelemetryRecord -TelemetryFilePath $SCRIPT:_EXO_TelemetryFilePath -CommandName Disconnect-ExchangeOnline -CommandParams $PSCmdlet.MyInvocation.BoundParameters -OrganizationName  $SCRIPT:_EXO_ExPSTelemetryOrganization -ScriptName $SCRIPT:_EXO_ExPSTelemetryScriptName  -ScriptExecutionGuid $SCRIPT:_EXO_ExPSTelemetryScriptExecutionGuid -ErrorObject $SCRIPT:Error -ErrorRecordsToConsider ($errorCountAtProcessEnd - $errorCountAtStart) 
                 }
 
                 throw $_
