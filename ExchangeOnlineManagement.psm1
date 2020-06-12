@@ -47,7 +47,7 @@
 
         [Uri]$uri = $UriString -as [Uri]
 
-        $uri.AbsoluteUri -ne $null -and $uri.Scheme -eq 'https'
+        $null -ne $uri.AbsoluteUri -and $uri.Scheme -eq 'https'
     }
 
     <#
@@ -92,20 +92,20 @@
 
                     $shouldRemoveCurrentSession = $false;
                     # Clear any left over PS tmp modules
-                    if (($SCRIPT:_EXO_PreviousModuleName -ne $null) -and ($SCRIPT:MyModule.Name -ne $SCRIPT:_EXO_PreviousModuleName)) 
+                    if (($null -ne $SCRIPT:_EXO_PreviousModuleName) -and ($SCRIPT:MyModule.Name -ne $SCRIPT:_EXO_PreviousModuleName)) 
                     {
                         Remove-Module -Name $SCRIPT:_EXO_PreviousModuleName -ErrorAction SilentlyContinue
                         $SCRIPT:_EXO_PreviousModuleName = $null
                     }
 
-                    if (($SCRIPT:PSSession -eq $null) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
+                    if (($null -eq $SCRIPT:PSSession) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
                     {
                         Set-PSImplicitRemotingSession `
                             (& $SCRIPT:GetPSSession `
                                 -InstanceId $SCRIPT:PSSession.InstanceId.Guid `
                                 -ErrorAction SilentlyContinue )
                     }
-                    if ($SCRIPT:PSSession -ne $null)
+                    if ($null -ne $SCRIPT:PSSession)
                     {
                         if ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -eq 'Disconnected')
                         {
@@ -127,7 +127,7 @@
                             }
                         }
                     }
-                    if (($SCRIPT:PSSession -eq $null) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened') -or ($shouldRemoveCurrentSession -eq $true))
+                    if (($null -eq $SCRIPT:PSSession) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened') -or ($shouldRemoveCurrentSession -eq $true))
                     {
                         Write-PSImplicitRemotingMessage ('Creating a new Remote PowerShell session using Modern Authentication for implicit remoting of "{0}" command ...' -f $commandName)
                         if (($isCloudShell = IsCloudShellEnvironment) -eq $false)
@@ -139,7 +139,7 @@
                             $session = New-ExoPSSession -ExchangeEnvironmentName $SCRIPT:_EXO_ExchangeEnvironmentName -ConnectionUri $SCRIPT:_EXO_ConnectionUri -AzureADAuthorizationEndpointUri $SCRIPT:_EXO_AzureADAuthorizationEndpointUri -PSSessionOption $SCRIPT:_EXO_PSSessionOption -BypassMailboxAnchoring:$SCRIPT:_EXO_BypassMailboxAnchoring -DelegatedOrg $SCRIPT:_EXO_DelegatedOrganization -Reconnect:$true
                         }
 
-                        if ($session -ne $null)
+                        if ($null -ne $session)
                         {
                             if ($shouldRemoveCurrentSession -eq $true)
                             {
@@ -157,7 +157,7 @@
                             RemoveBrokenOrClosedPSSession
                         }
                     }
-                    if (($SCRIPT:PSSession -eq $null) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
+                    if (($null -eq $SCRIPT:PSSession) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened'))
                     {
                         throw 'No session has been associated with this implicit remoting module'
                     }
@@ -219,7 +219,7 @@
         }
 
         # Clear any left over PS tmp modules
-        if ($SCRIPT:_EXO_PreviousModuleName -ne $null)
+        if ($null -ne $SCRIPT:_EXO_PreviousModuleName)
         {
             Remove-Module -Name $SCRIPT:_EXO_PreviousModuleName -ErrorAction SilentlyContinue
             $SCRIPT:_EXO_PreviousModuleName = $null
@@ -445,7 +445,7 @@ function Connect-ExchangeOnline
                 $PSSession = New-ExoPSSession -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -PSSessionOption $PSSessionOption -BypassMailboxAnchoring:$BypassMailboxAnchoring -Device:$Device.Value -DelegatedOrg $DelegatedOrganization
             }
 
-            if ($PSSession -ne $null)
+            if ($null -ne $PSSession)
             {
                 $PSSessionModuleInfo = Import-PSSession $PSSession -AllowClobber -DisableNameChecking
 
@@ -481,7 +481,7 @@ function Connect-ExchangeOnline
             {
                 $errorCountAtProcessEnd = $SCRIPT:Error.Count 
 
-                if ($SCRIPT:_EXO_TelemetryFilePath -eq $null)
+                if ($null -eq $SCRIPT:_EXO_TelemetryFilePath)
                 {
                     $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath -LogDirectoryPath $LogDirectoryPath.Value
 
@@ -566,7 +566,7 @@ function Connect-IPPSSession
         {
             [UriBuilder] $uriBuilder = New-Object -TypeName UriBuilder -ArgumentList $ConnectionUri;
             [string] $queryToAppend = "DelegatedOrg={0}" -f $DelegatedOrganization;
-            if ($uriBuilder.Query -ne $null -and $uriBuilder.Query.Length -gt 0)
+            if ($null -ne $uriBuilder.Query -and $uriBuilder.Query.Length -gt 0)
             {
                 [string] $existingQuery = $uriBuilder.Query.Substring(1);
                 $uriBuilder.Query = $existingQuery + "&" + $queryToAppend;
@@ -621,7 +621,7 @@ function Disconnect-ExchangeOnline
 
                 if ($SCRIPT:_EXO_EnableErrorReporting -eq $true)
                 {
-                    if ($SCRIPT:_EXO_TelemetryFilePath -eq $null)
+                    if ($null -eq $SCRIPT:_EXO_TelemetryFilePath)
                     {
                         $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath
                     }
@@ -636,7 +636,7 @@ function Disconnect-ExchangeOnline
                 {
                     $errorCountAtProcessEnd = $SCRIPT:Error.Count 
 
-                    if ($SCRIPT:_EXO_TelemetryFilePath -eq $null)
+                    if ($null -eq $SCRIPT:_EXO_TelemetryFilePath)
                     {
                         $SCRIPT:_EXO_TelemetryFilePath = New-EXOClientTelemetryFilePath
                     }
