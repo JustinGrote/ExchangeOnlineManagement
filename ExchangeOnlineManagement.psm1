@@ -147,15 +147,8 @@
                                 $SCRIPT:_EXO_PreviousModuleName = $SCRIPT:MyModule.Name
                             }
 
-                            # Import the latest session to ensure that the next cmdlet call would occur on the new PSSession instance.
-                            $ImportPSSessionParams = @{
-                                Session = $session
-                                AllowClobber = $true
-                                DisableNameChecking = $true
-                            }
-                            if ($CommandName) {$ImportPSSessionParams.CommandName = $CommandName}
-                            $PSSessionModuleInfo = Import-PSSession @ImportPSSessionParams
-                            Import-Module $PSSessionModuleInfo.Path -Global -DisableNameChecking -Prefix $SCRIPT:_EXO_Prefix
+                            ImportExSession $session
+
                             UpdateImplicitRemotingHandler
                             $SCRIPT:PSSession = $session
 
@@ -255,6 +248,22 @@
         $cmd = Get-Command -Name $CommandName -Module $ModuleName -CommandType $CommandType -All
         return $cmd
     }
+
+    function ImportExSession ($PSSession) {
+        $ImportPSSessionParams = @{
+            Session = $PSSession
+            AllowClobber = $true
+            DisableNameChecking = $true
+        }
+        if ($Prefix) {$ImportPSSessionParams.Prefix = $Prefix}
+        if ($CommandName) {$ImportPSSessionParams.CommandName = $CommandName}
+        $ExSessionModuleInfo = Import-PSSession @ImportPSSessionParams
+        
+        #Export-Modulemember doesn't work with nested modules, ideally the command would be exported at module scope instead
+        Get-Module Microsoft.Exchange.Management.ExoPowershellGalleryModule | Import-Module -Global
+        $ExSessionModuleInfo | Import-Module -Global
+    }
+
 
 ############# Helper Functions End #############
 
@@ -457,17 +466,7 @@ function Connect-ExchangeOnline
 
             if ($null -ne $PSSession)
             {
-                $ImportPSSessionParams = @{
-                    Session = $PSSession
-                    AllowClobber = $true
-                    DisableNameChecking = $true
-                }
-                if ($CommandName) {$ImportPSSessionParams.CommandName = $CommandName}
-                $PSSessionModuleInfo = Import-PSSession @ImportPSSessionParams
-
-                # Import the above module globally. This is needed as with using psm1 files, 
-                # any module which is dynamically loaded in the nested module does not reflect globally.
-                Import-Module $PSSessionModuleInfo.Path -Global -DisableNameChecking -Prefix $Prefix
+                ImportExSession $PSSession
 
                 UpdateImplicitRemotingHandler
 
