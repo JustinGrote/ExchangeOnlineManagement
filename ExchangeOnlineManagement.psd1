@@ -2,6 +2,14 @@
 RootModule = 'ExchangeOnlineManagement.psm1'
 FunctionsToExport = @('Connect-ExchangeOnline', 'Connect-IPPSSession', 'Disconnect-ExchangeOnline')
 ModuleVersion = '1.0.1'
+NestedModules = @(
+    '.\Microsoft.Exchange.Management.ExoPowershellGalleryModule.dll',
+    '.\Microsoft.Exchange.Management.RestApiClient.dll'
+)
+ModuleList = @(
+    '.\Microsoft.Exchange.Management.ExoPowershellGalleryModule.dll',
+    '.\Microsoft.Exchange.Management.RestApiClient.dll'
+)
 GUID = 'B5ECED50-AFA4-455B-847A-D8FB64140A22'
 Author = 'Microsoft Corporation'
 CompanyName = 'Microsoft Corporation'

@@ -1,13 +1,3 @@
-
-# Import the REST module so that the EXO* cmdlets are present before Connect-ExchangeOnline in the powershell instance.
-$RestModule = "Microsoft.Exchange.Management.RestApiClient.dll"
-$RestModulePath = [System.IO.Path]::Combine($PSScriptRoot, $RestModule)
-Import-Module $RestModulePath
-
-$ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellGalleryModule.dll"
-$ExoPowershellModulePath = [System.IO.Path]::Combine($PSScriptRoot, $ExoPowershellModule)
-Import-Module $ExoPowershellModulePath
-
 ############# Helper Functions Begin #############
 
     <#
