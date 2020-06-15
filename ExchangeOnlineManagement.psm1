@@ -130,7 +130,7 @@
                     if (($null -eq $SCRIPT:PSSession) -or ($SCRIPT:PSSession.Runspace.RunspaceStateInfo.State -ne 'Opened') -or ($shouldRemoveCurrentSession -eq $true))
                     {
                         Write-PSImplicitRemotingMessage ('Creating a new Remote PowerShell session using Modern Authentication for implicit remoting of "{0}" command ...' -f $commandName)
-                        if (($isCloudShell = IsCloudShellEnvironment) -eq $false)
+                        if (-not $isCloudShell)
                         {
                             $session = New-ExoPSSession -UserPrincipalName $SCRIPT:_EXO_UserPrincipalName -ExchangeEnvironmentName $SCRIPT:_EXO_ExchangeEnvironmentName -ConnectionUri $SCRIPT:_EXO_ConnectionUri -AzureADAuthorizationEndpointUri $SCRIPT:_EXO_AzureADAuthorizationEndpointUri -PSSessionOption $SCRIPT:_EXO_PSSessionOption -Credential $SCRIPT:_EXO_Credential -BypassMailboxAnchoring:$SCRIPT:_EXO_BypassMailboxAnchoring -DelegatedOrg $SCRIPT:_EXO_DelegatedOrganization -Reconnect:$true
                         }
@@ -258,6 +258,9 @@
 
 ###### Begin Main ######
 
+#Cloud Shell Detection
+$SCRIPT:isCloudShell = IsCloudShellEnvironment
+
 function Connect-ExchangeOnline
 {
     [CmdletBinding()]
@@ -296,7 +299,7 @@ function Connect-ExchangeOnline
     )
     DynamicParam
     {
-        if (($isCloudShell = IsCloudShellEnvironment) -eq $false)
+        if (-not $isCloudShell)
         {
             $attributes = New-Object System.Management.Automation.ParameterAttribute
             $attributes.Mandatory = $false
@@ -433,7 +436,7 @@ function Connect-ExchangeOnline
             $SCRIPT:_EXO_DelegatedOrganization = $DelegatedOrganization;
             $SCRIPT:_EXO_Prefix = $Prefix;
 
-            if ($isCloudShell -eq $false)
+            if (-not $isCloudShell)
             {
                 $SCRIPT:_EXO_UserPrincipalName = $UserPrincipalName.Value;
                 $SCRIPT:_EXO_Credential = $Credential.Value;
@@ -444,7 +447,7 @@ function Connect-ExchangeOnline
                 $SCRIPT:_EXO_Device = $Device.Value;
             }
 
-            if ($isCloudShell -eq $false)
+            if (-not $isCloudShell)
             {
                 $PSSession = New-ExoPSSession -ExchangeEnvironmentName $ExchangeEnvironmentName -ConnectionUri $ConnectionUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -UserPrincipalName $UserPrincipalName.Value -PSSessionOption $PSSessionOption -Credential $Credential.Value -BypassMailboxAnchoring:$BypassMailboxAnchoring -DelegatedOrg $DelegatedOrganization
             }
@@ -524,7 +527,7 @@ function Connect-IPPSSession
     )
     DynamicParam
     {
-        if (($isCloudShell = IsCloudShellEnvironment) -eq $false)
+        if (-not $isCloudShell)
         {
             $attributes = New-Object System.Management.Automation.ParameterAttribute
             $attributes.Mandatory = $false
@@ -587,7 +590,7 @@ function Connect-IPPSSession
             $newUri = $ConnectionUri;
         }
 
-        if ($isCloudShell -eq $false)
+        if (-not $isCloudShell)
         {
             Connect-ExchangeOnline -ConnectionUri $newUri -AzureADAuthorizationEndpointUri $AzureADAuthorizationEndpointUri -UserPrincipalName $UserPrincipalName.Value -PSSessionOption $PSSessionOption -Credential $Credential.Value -BypassMailboxAnchoring:$BypassMailboxAnchoring -ShowBanner:$false
         }
